@@ -1,19 +1,31 @@
 import org.json.JSONException;
-import org.json.JSONObject;
 import java.io.IOException;
 import java.text.ParseException;
+
 
 public class Main {
 
 	//private static JSONObject userInfo, orderBook, trades;
-    
+    public static void waitForMinuteLapse() throws InterruptedException {
+    	long systemTime = System.currentTimeMillis();
+    	long tenMinLapse = (long) Math.ceil(systemTime / 60000);
+    	long waitTime = (((tenMinLapse + 1) * 60000) - systemTime);
+    	//long minutes = TimeUnit.MILLISECONDS.toMinutes(waitTime);
+    	//long seconds = TimeUnit.MILLISECONDS.toSeconds(waitTime);
+    	//System.out.print("Esperando " + String.valueOf(minutes) + "' " + String.valueOf(seconds) + "\"\n");
+    	Thread.sleep(waitTime);
+    }
 
-    public static void main(String[] args) throws JSONException, ParseException, IOException {
+    public static void main(String[] args) throws JSONException, ParseException, IOException, InterruptedException {
         Exmo exmo = new Exmo();
-        
         exmo.getUserAccountStatus();
-        exmo.getCurrentOrderBook("BTC_USD", "1");
-        exmo.getLast100Trades("BTC_USD");
-         
+        
+        while(true) {
+            waitForMinuteLapse();
+            
+            exmo.getCurrentOrderBook("BTC_USD", "1");
+            exmo.getLast100Trades("BTC_USD");
+        }
+
     }
 }

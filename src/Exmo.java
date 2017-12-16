@@ -1,7 +1,3 @@
-/**
- * Created by Admin on 2/18/2016.
- */
-
 import okhttp3.*;
 import org.apache.commons.codec.binary.Hex;
 import org.json.JSONArray;
@@ -30,18 +26,20 @@ public class Exmo {
     private String _secret;
 
     public Exmo() {
-        _nonce = System.nanoTime();
+        _nonce = System.currentTimeMillis();
         String keys = null;
 		try { keys = hexToAscii(readFile("keys.txt").findFirst().get()); }
 		catch (IOException e) { e.printStackTrace(); }
     	_key = keys.substring(0, 42);
     	_secret = keys.substring(42);
     }
+
     
     public JSONObject getUserAccountStatus() {
     	JSONObject ui = new JSONObject(this.Request("user_info", null));
+    	long unixTime = Long.parseLong(ui.get("server_date").toString());
     	
-    	String server_date = unixSecondsToString(ui.get("server_date").toString());
+    	String server_date = epochTimeToString(unixTime * 1000L);
         JSONObject balances = ui.getJSONObject("balances");
         String USD = balances.getString("USD");
         System.out.println("Server Date: " + server_date);
@@ -62,7 +60,7 @@ public class Exmo {
         double ask = Double.parseDouble(ask_top);
         double bid = Double.parseDouble(bid_top);
         System.out.println("--------------------------");
-        System.out.println("Currency trade prices:");
+        System.out.println("Currency trade prices: [" + epochTimeToString(System.currentTimeMillis()) + "]");
         System.out.print(" BTC -> USD = ");
         System.out.println((ask+bid)/2);
         return ob;
@@ -89,9 +87,13 @@ public class Exmo {
         return t;
     }
     
-	private static String unixSecondsToString(String unixSecondsString) {
-		long unixSeconds = Long.parseLong(unixSecondsString);
-        Date date = new Date(unixSeconds*1000L);
+    
+    
+    
+    // ----------------------- METODOS PRIVADOS -----------------------
+    
+	private static String epochTimeToString(long timestamp) {
+        Date date = new Date(timestamp);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
 	    sdf.setTimeZone(TimeZone.getTimeZone("GMT-3")); 
 	    String formattedDate = sdf.format(date);
@@ -113,7 +115,7 @@ public class Exmo {
         return stream;
     }
 
-    public final String Request(String method, Map<String, String> arguments) {
+    private final String Request(String method, Map<String, String> arguments) {
         Mac mac;
         SecretKeySpec key;
         String sign;
