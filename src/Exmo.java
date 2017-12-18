@@ -3,6 +3,8 @@ import org.apache.commons.codec.binary.Hex;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javafx.util.Pair;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
@@ -35,9 +37,10 @@ public class Exmo {
     }
 
     
+    
     public JSONObject getUserAccountStatus() {
     	JSONObject ui = new JSONObject(this.Request("user_info", null));
-    	long unixTime = Long.parseLong(ui.get("server_date").toString());
+    	long unixTime = ui.getLong("server_date");
     	
     	String server_date = epochTimeToString(unixTime * 1000L);
         JSONObject balances = ui.getJSONObject("balances");
@@ -48,49 +51,47 @@ public class Exmo {
     	return ui;
     }
     
-    public JSONObject getCurrentOrderBook(String pair, String limit) {
-        HashMap<String, String> orderBookMap = new HashMap<String, String>() {
-			private static final long serialVersionUID = 1L;
-			{ put("pair", pair); put("limit", limit); }
-        };
-        JSONObject ob = new JSONObject(this.Request("order_book", orderBookMap));
-        
-        String bid_top = ob.getJSONObject("BTC_USD").getString("bid_top");
-        String ask_top = ob.getJSONObject("BTC_USD").getString("ask_top");
-        double ask = Double.parseDouble(ask_top);
-        double bid = Double.parseDouble(bid_top);
-        System.out.println("--------------------------");
-        System.out.println("Currency trade prices: [" + epochTimeToString(System.currentTimeMillis()) + "]");
-        System.out.print(" BTC -> USD = ");
-        System.out.println((ask+bid)/2);
-        return ob;
-    }
     
-    public JSONObject getLast100Trades(String pair) {
-    	HashMap<String, String> tradesMap = new HashMap<String, String>() {
-			private static final long serialVersionUID = 2L;
-			{ put("pair", pair); put(null, null); }
-        };
-        JSONObject t = new JSONObject(this.Request("trades", tradesMap));
+    public Pair<Double, Double> getLowHighValues (String pair) {
+    	HashMap<String, String> map = new HashMap<String, String>();
+		map.put("pair", pair);
+        JSONObject trades = new JSONObject(this.Request("trades", map));
         
-        JSONArray BTCtrades = t.getJSONArray("BTC_USD");
-        String price0 = (new JSONObject(BTCtrades.get(0).toString())).getString("price");
-        double high = Double.parseDouble(price0);
-        double low = high;
-        for (int i = 1; i < 100; i++) {
-        	String priceN = (new JSONObject(BTCtrades.get(i).toString())).getString("price");
-        	if (Double.parseDouble(priceN) > high) high = Double.parseDouble(priceN);
-        	if (Double.parseDouble(priceN) < low) low = Double.parseDouble(priceN);
+        JSONArray BTCtrades = trades.getJSONArray(pair);
+        Long lastMinute = lastMinute(); // Unix TimeStamp
+        Long tradeDate;
+        double low = -1;
+        double high = -1;
+        double price;
+        
+        for (int i = 0; i < BTCtrades.length(); i++) {
+        	tradeDate = BTCtrades.getJSONObject(i).getLong("date");
+        	price = BTCtrades.getJSONObject(i).getDouble("price");
+        	
+        	if (tradeDate >= lastMinute) {
+        		if (low < 0)
+        			low = high = price;
+        		else {
+        			if (price > high)
+        				high = price;
+        			if (price < low)
+        				low = price;
+        		}
+        	}
         }
-        System.out.println(" High = " + String.valueOf(high));
-        System.out.println(" Low = " + String.valueOf(low));
-        return t;
+        return new Pair<>(low, high);
     }
     
-    
+
     
     
     // ----------------------- METODOS PRIVADOS -----------------------
+    
+    private Long lastMinute() {
+    	long time = (long) Math.ceil((System.currentTimeMillis() + 1000) / 60000L);
+        time = (time - 1) * 60L;
+        return time;
+    }
     
 	private static String epochTimeToString(long timestamp) {
         Date date = new Date(timestamp);
@@ -115,7 +116,7 @@ public class Exmo {
         return stream;
     }
 
-    private final String Request(String method, Map<String, String> arguments) {
+    public final String Request(String method, Map<String, String> arguments) {
         Mac mac;
         SecretKeySpec key;
         String sign;
