@@ -1,9 +1,6 @@
 import okhttp3.*;
 import org.apache.commons.codec.binary.Hex;
-import org.json.JSONArray;
 import org.json.JSONObject;
-
-import javafx.util.Pair;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -52,48 +49,11 @@ public class Exmo {
     }
     
     
-    public Pair<Double, Double> getLowHighValues (String pair) {
-    	HashMap<String, String> map = new HashMap<String, String>();
-		map.put("pair", pair);
-        JSONObject trades = new JSONObject(this.Request("trades", map));
-        
-        JSONArray BTCtrades = trades.getJSONArray(pair);
-        Long lastMinute = lastMinute(); // Unix TimeStamp
-        Long tradeDate;
-        double low = -1;
-        double high = -1;
-        double price;
-        
-        for (int i = 0; i < BTCtrades.length(); i++) {
-        	tradeDate = BTCtrades.getJSONObject(i).getLong("date");
-        	price = BTCtrades.getJSONObject(i).getDouble("price");
-        	
-        	if (tradeDate >= lastMinute) {
-        		if (low < 0)
-        			low = high = price;
-        		else {
-        			if (price > high)
-        				high = price;
-        			if (price < low)
-        				low = price;
-        		}
-        	}
-        }
-        return new Pair<>(low, high);
-    }
-    
 
-    
     
     // ----------------------- METODOS PRIVADOS -----------------------
     
-    private Long lastMinute() {
-    	long time = (long) Math.ceil((System.currentTimeMillis() + 1000) / 60000L);
-        time = (time - 1) * 60L;
-        return time;
-    }
-    
-	private static String epochTimeToString(long timestamp) {
+	public static String epochTimeToString(long timestamp) {
         Date date = new Date(timestamp);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
 	    sdf.setTimeZone(TimeZone.getTimeZone("GMT-3")); 
@@ -175,21 +135,30 @@ public class Exmo {
         // Now do the actual request
         MediaType form = MediaType.parse("application/x-www-form-urlencoded; charset=utf-8");
 
+        RequestBody body = RequestBody.create(form, postData);
+        Request request = new Request.Builder()
+                .url("https://api.exmo.com/v1/" + method)
+                .addHeader("Key", _key)
+                .addHeader("Sign", sign)
+                .post(body)
+                .build();
+        
         OkHttpClient client = new OkHttpClient();
         try {
-
-            RequestBody body = RequestBody.create(form, postData);
-            Request request = new Request.Builder()
-                    .url("https://api.exmo.com/v1/" + method)
-                    .addHeader("Key", _key)
-                    .addHeader("Sign", sign)
-                    .post(body)
-                    .build();
-            
             Response response = client.newCall(request).execute();
             return response.body().string();
         } catch (IOException e) {
             System.err.println("Request fail: " + e.toString());
+            if (e.toString().contains("SocketTimeoutException")) {
+            	System.out.println("Trying again in 3 seconds...");
+            	try {
+	                Response response = client.newCall(request).execute();
+	                return response.body().string();
+            	} catch (IOException e2) {
+            		System.err.println("Request fail again: " + e.toString());
+            		return null;
+            	}
+            }
             return null;  // An error occured...
         }
     }
