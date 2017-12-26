@@ -17,7 +17,7 @@ public class Main extends BaseClass {
         Long hora;
         String data;
         int i = 0;
-        //waitFor(ONEHOUR);
+        waitFor(ONEHOUR);
         while(true) {
         	hora = currentHour();
         	data = "";
@@ -48,7 +48,7 @@ public class Main extends BaseClass {
             	data = data.concat("%TimeStamp=" + String.valueOf(hora) + ",BTC:Open=" + String.valueOf(BTC.open) + ",BTC:Close=" + String.valueOf(BTC.close) + ",BTC:Low=" + String.valueOf(BTC.low) + ",BTC:High=" + String.valueOf(BTC.high));
             	data = data.concat("%TimeStamp=" + String.valueOf(hora) + ",BCH:Open=" + String.valueOf(BCH.open) + ",BCH:Close=" + String.valueOf(BCH.close) + ",BCH:Low=" + String.valueOf(BCH.low) + ",BCH:High=" + String.valueOf(BCH.high));
             	data = data.concat("%TimeStamp=" + String.valueOf(hora) + ",ETH:Open=" + String.valueOf(ETH.open) + ",ETH:Close=" + String.valueOf(ETH.close) + ",ETH:Low=" + String.valueOf(ETH.low) + ",ETH:High=" + String.valueOf(ETH.high));
-            	data = data.concat("%TimeStamp=" + String.valueOf(hora) + ",LTC:Open=" + String.valueOf(LTC.open) + ",LTC:Close=" + String.valueOf(LTC.close) + ",LTC:Low=" + String.valueOf(LTC.low) + ",LTC:High=" + String.valueOf(LTC.high));
+            	data = data.concat("%TimeStamp=" + String.valueOf(hora) + ",LTC:Open=" + String.valueOf(LTC.open) + ",LTC:Close=" + String.valueOf(LTC.close) + ",LTC:Low=" + String.valueOf(LTC.low) + ",LTC:High=" + String.valueOf(LTC.high) + "\n");
             	
             	writeUsingFiles(data);
             }

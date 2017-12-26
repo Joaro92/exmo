@@ -138,32 +138,26 @@ public class BaseClass {
             		}
             	}
             }
-        	
-        	switch (pair) {
-        		case "BTC_USD":
-        			if (BTC.low > 0 && low < BTC.low) BTC.low = low;
-        			if (BTC.low == 0 && low > 0) BTC.low = low;
-        			if (BTC.high > 0 && high > BTC.high) BTC.high = high;
-        			if (BTC.high == 0 && high > 0) BTC.high = high;
-        			break;
-        		case "BCH_USD":
-        			if (BCH.low > 0 && low < BCH.low) BCH.low = low;
-        			if (BCH.low == 0 && low > 0) BCH.low = low;
-        			if (BCH.high > 0 && high > BCH.high) BCH.high = high;
-        			if (BCH.high == 0 && high > 0) BCH.high = high;
-        			break;
-        		case "ETH_USD":
-        			if (ETH.low > 0 && low < ETH.low) ETH.low = low;
-        			if (ETH.low == 0 && low > 0) ETH.low = low;
-        			if (ETH.high > 0 && high > ETH.high) ETH.high = high;
-        			if (ETH.high == 0 && high > 0) ETH.high = high;
-        			break;
-        		case "LTC_USD":
-        			if (LTC.low > 0 && low < LTC.low) LTC.low = low;
-        			if (LTC.low == 0 && low > 0) LTC.low = low;
-        			if (LTC.high > 0 && high > LTC.high) LTC.high = high;
-        			if (LTC.high == 0 && high > 0) LTC.high = high;
-        			break;
+
+        	if (low > 0 && high > 0) {
+	        	switch (pair) {
+	        		case "BTC_USD":
+	        			if (BTC.low == 0 || low < BTC.low) BTC.low = low;
+	        			if (BTC.high == 0 || high > BTC.high) BTC.high = high;
+	        			break;
+	        		case "BCH_USD":
+	        			if (BCH.low == 0 || low < BCH.low) BCH.low = low;
+	        			if (BCH.high == 0 || high > BCH.high) BCH.high = high;
+	        			break;
+	        		case "ETH_USD":
+	        			if (ETH.low == 0 || low < ETH.low) ETH.low = low;
+	        			if (ETH.high == 0 || high > ETH.high) ETH.high = high;
+	        			break;
+	        		case "LTC_USD":
+	        			if (LTC.low == 0 || low < LTC.low) LTC.low = low;
+	        			if (LTC.high == 0 || high > LTC.high) LTC.high = high;
+	        			break;
+	        	}
         	}
         	
         	low = -1;
